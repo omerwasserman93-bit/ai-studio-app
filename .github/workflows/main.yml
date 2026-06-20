@@ -1,0 +1,64 @@
+name: Compile Web App to APK
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # 1. Web Runtime Environment: Node.js is required to install Vite and build the UI.
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    # 2. Native Compilation Environment: Java is required by the Android Gradle system.
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    # 3. Web Dependency Resolution: Reads package.json and installs required modules.
+    - name: Install Web Dependencies
+      run: npm install
+
+    # 4. Web Compilation: Executes Vite to bundle TypeScript and HTML into static assets. 
+    # By default, this outputs to a generic folder named 'dist'.
+    - name: Build Web App
+      run: npm run build
+
+    # 5. Capacitor Installation: Injects the core native wrapper dependencies.
+    - name: Install Capacitor
+      run: npm install @capacitor/core @capacitor/cli @capacitor/android
+
+    # 6. Capacitor Initialization: Programmatically generates the configuration mapping 
+    # the app name, package ID, and the directory of the compiled web assets.
+    - name: Initialize Capacitor
+      run: npx cap init "AI Studio App" "com.example.aiapp" --web-dir dist
+
+    # 7. Native Project Generation: Scaffolds the 'android/' directory containing the 
+    # necessary build.gradle files and AndroidManifest.xml.
+    - name: Add Android Platform
+      run: npx cap add android
+
+    # 8. Permission Modification: Grants execution rights to the newly generated Gradle wrapper.
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+
+    # 9. APK Compilation: Navigates into the native project and executes the build automation.
+    - name: Build APK with Gradle
+      run: cd android && ./gradlew assembleDebug
+
+    # 10. Artifact Extraction: Uploads the compiled binary to the GitHub interface.
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: debug-apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
