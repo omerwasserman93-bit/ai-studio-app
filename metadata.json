@@ -1,0 +1,6 @@
+{
+  "name": "Smart Alarm",
+  "description": "Smart Alarm integrates with Google Calendar to dynamically calculate optimal wake-up times based on your first daily meeting, featuring custom thresholds, delay settings, and companion API support for Android automation systems.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
